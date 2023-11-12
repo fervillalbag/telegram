@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
+import Pusher from "pusher-js";
 
 const ChatComponent = () => {
   return (
@@ -27,6 +28,25 @@ export default function Home() {
       localStorage.getItem("access_token") as any
     );
     setUser(decoded);
+  }, []);
+
+  useEffect(() => {
+    const pusher = new Pusher(
+      process.env.NEXT_PUBLIC_PUSHER_KEY as string,
+      {
+        cluster: "us2",
+      }
+    );
+
+    const channel = pusher.subscribe("testing-chat");
+    channel.bind("testing-message", (newMessage: any) => {
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    });
+
+    return () => {
+      channel.unbind_all();
+      channel.unsubscribe();
+    };
   }, []);
 
   return (
